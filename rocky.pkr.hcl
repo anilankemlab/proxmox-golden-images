@@ -65,16 +65,13 @@ build {
   sources = ["source.proxmox-iso.rocky"]
 
 provisioner "shell" {
-  expect_disconnect = true
-
   inline = [
     "dnf -y update",
     "dnf -y install qemu-guest-agent cloud-init sudo",
     "cloud-init clean",
     "truncate -s 0 /etc/machine-id",
     "rm -f /var/lib/dbus/machine-id",
-    "rm -rf /var/lib/cloud/*",
-    "shutdown -h now"
-    ]
-  }
+    "rm -rf /var/lib/cloud/*"
+  ]
+}
 }
