@@ -1,0 +1,41 @@
+name: Build Proxmox Templates
+
+on:
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: rocky-latest
+
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v4
+
+      - name: Install Packer
+        run: |
+          wget https://releases.hashicorp.com/packer/1.10.1/packer_1.10.1_linux_amd64.zip
+          unzip packer_1.10.1_linux_amd64.zip
+          sudo mv packer /usr/local/bin/
+
+      - name: Packer Init
+        run: packer init .
+
+      - name: Build Rocky Template
+        run: |
+          packer build \
+          -var "proxmox_url=${{ secrets.PROXMOX_URL }}" \
+          -var "token_id=${{ secrets.PROXMOX_TOKEN_ID }}" \
+          -var "token_secret=${{ secrets.PROXMOX_TOKEN_SECRET }}" \
+          rocky.pkr.hcl
+
+      - name: Verify Template
+        run: |
+          curl -k -H "Authorization: PVEAPIToken=${{ secrets.PROXMOX_TOKEN_ID }}=${{ secrets.PROXMOX_TOKEN_SECRET }}" \
+          ${{ secrets.PROXMOX_URL }}/nodes/pve/qemu/9001/status/current | grep template
+
+      - name: Rename to Current
+        run: |
+          curl -k -X PUT \
+          -H "Authorization: PVEAPIToken=${{ secrets.PROXMOX_TOKEN_ID }}=${{ secrets.PROXMOX_TOKEN_SECRET }}" \
+          -d "name=ubuntu-22-current" \
+          ${{ secrets.PROXMOX_URL }}/nodes/pve/qemu/9001/config
