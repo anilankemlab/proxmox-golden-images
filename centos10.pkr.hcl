@@ -32,11 +32,11 @@ source "proxmox-iso" "centos10" {
 
   # ✅ Disk (v1.2 syntax)
   disks {
-    type   = "scsi"
-    storage = "local-lvm"
-    size   = "20G"
+    type         = "scsi"
+    storage_pool = "local-lvm"
+    disk_size    = "20G"
+    format       = "raw"
   }
-
   # ✅ Network
   network_adapters {
     bridge = "vmbr0"
