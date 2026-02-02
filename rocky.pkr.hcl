@@ -17,36 +17,38 @@ source "proxmox-iso" "rocky" {
   token                    = var.token_secret
   insecure_skip_tls_verify = true
 
-  node    = "proxmox"
-  vm_id   = 9002
-  vm_name = "rocky-9-golden"
+  node     = "proxmox"
+  vm_id    = 9002
+  vm_name  = "rocky-9-golden"
+  os       = "other"
+  memory   = 2048
 
-  # ✅ NEW names in 1.2.x
-  cpu {
-    type    = "host"
-    sockets = 1
-    cores   = 2
-  }
+  # ✅ CPU (per docs)
+  cpu_type = "host"
+  cores    = 2
+  sockets  = 1
+  numa     = false
 
-  memory = 2048
-  os     = "other"
+  scsi_controller = "virtio-scsi-pci"
 
   network_adapters {
     bridge = "vmbr0"
     model  = "virtio"
   }
 
+  # ✅ Disk (per docs)
   disks {
-    interface    = "scsi"
+    type         = "scsi"
     storage_pool = "local-lvm"
-    size         = "20G"
+    disk_size    = "20G"
+    format       = "raw"
   }
 
-  scsi_controller = "virtio-scsi-pci"
-
-  iso {
-    storage_pool = "local"
-    file         = "Rocky-9-latest-x86_64-boot.iso"
+  # ✅ ISO (per docs — NOT iso {} block)
+  boot_iso {
+    type     = "scsi"
+    iso_file = "local:iso/Rocky-9-latest-x86_64-boot.iso"
+    unmount  = true
   }
 
   ssh_username = "root"
