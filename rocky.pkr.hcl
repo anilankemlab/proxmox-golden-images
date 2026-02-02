@@ -37,7 +37,7 @@ source "proxmox-iso" "rocky" {
     type         = "scsi"
     storage_pool = "local-lvm"
     disk_size    = "20G"
-    format       = "qcow2"
+    format       = "raw"
   }
 
   ssh_username  = "root"
