@@ -15,29 +15,7 @@ jobs:
       - name: Checkout repo
         uses: actions/checkout@v4
 
-      # Ensure tools exist
-    - name: Ensure Packer and jq
-  run: |
-    # Install jq if missing
-    command -v jq >/dev/null 2>&1 || sudo apt update && sudo apt install -y jq
-
-    # Install / Upgrade Packer if version < 1.14
-    PACKER_VERSION=$(packer version | head -1 | awk '{print $2}' | tr -d 'v')
-    REQUIRED="1.14.3"
-
-    if [ "$(printf '%s\n' "$REQUIRED" "$PACKER_VERSION" | sort -V | head -n1)" != "$REQUIRED" ]; then
-      echo "Upgrading Packer..."
-      curl -fsSL https://apt.releases.hashicorp.com/gpg | sudo apt-key add -
-      sudo apt-add-repository "deb https://apt.releases.hashicorp.com $(lsb_release -cs) main"
-      sudo apt update
-      sudo apt install -y packer
-    fi
-
-    packer version
-    jq --version
-
-
-      # Cleanup old VM
+      # ✅ Cleanup old VM if exists
       - name: Cleanup existing VM
         run: |
           STATUS=$(curl -s -k \
@@ -73,7 +51,7 @@ jobs:
           PKR_VAR_token_secret: ${{ secrets.PROXMOX_TOKEN_SECRET }}
         run: packer build rocky.pkr.hcl
 
-      # Verify VM is stopped
+      # ✅ Verify VM stopped
       - name: Verify VM stopped
         run: |
           STATE=$(curl -s -k \
@@ -81,17 +59,16 @@ jobs:
             ${{ secrets.PROXMOX_URL }}/nodes/${NODE}/qemu/${VMID}/status/current \
             | jq -r '.data.status')
 
-          echo "VM state: $STATE"
           [ "$STATE" = "stopped" ]
 
-      # 🔥 Convert VM to Template
+      # ✅ Convert to template
       - name: Convert to Template
         run: |
           curl -s -k -X POST \
             -H "Authorization: PVEAPIToken=${{ secrets.PROXMOX_TOKEN_ID }}=${{ secrets.PROXMOX_TOKEN_SECRET }}" \
             ${{ secrets.PROXMOX_URL }}/nodes/${NODE}/qemu/${VMID}/template
 
-      # ✅ Validate template flag
+      # ✅ Validate template
       - name: Validate Template
         run: |
           TEMPLATE=$(curl -s -k \
@@ -99,11 +76,4 @@ jobs:
             ${{ secrets.PROXMOX_URL }}/nodes/${NODE}/qemu/${VMID}/status/current \
             | jq -r '.data.template')
 
-          echo "Template flag: $TEMPLATE"
-
-          if [ "$TEMPLATE" != "true" ]; then
-            echo "Template conversion failed!"
-            exit 1
-          fi
-
-          echo "✅ Rocky Golden Template Ready!"
+          [ "$TEMPLATE" = "true" ]
