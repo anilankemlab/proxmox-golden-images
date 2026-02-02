@@ -21,7 +21,8 @@ source "proxmox-iso" "rocky" {
   vm_id        = 9002
   vm_name      = "rocky-9-golden"
 
-  iso_file     = "local:iso/Rocky-9.4-x86_64-minimal.iso"
+  iso_file = "local:iso/Rocky-9-latest-x86_64-boot.iso"
+
   unmount_iso  = true
 
   cores        = 2
