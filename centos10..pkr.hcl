@@ -11,7 +11,7 @@ variable "proxmox_url" {}
 variable "token_id" {}
 variable "token_secret" {}
 
-source "proxmox-iso" "centos" {
+source "proxmox-iso" "centos10" {
   proxmox_url              = var.proxmox_url
   username                 = var.token_id
   token                    = var.token_secret
@@ -20,13 +20,12 @@ source "proxmox-iso" "centos" {
   node     = "proxmox"
   vm_id    = 9003
   vm_name  = "centos10-stream-golden"
-  os       = "other"
-  memory   = 2048
+  os       = "l26"
 
-  cpu_type = "host"
+  memory   = 2048
   cores    = 2
   sockets  = 1
-  numa     = false
+  cpu_type = "host"
 
   scsi_controller = "virtio-scsi-pci"
 
@@ -42,36 +41,42 @@ source "proxmox-iso" "centos" {
     format       = "raw"
   }
 
-  boot_iso {
-    type     = "scsi"
-    iso_file = "local:iso/CentOS-Stream-10-latest-x86_64-dvd1.iso"
-    unmount  = true
-  }
+  # ISO already uploaded to Proxmox
+  iso_file          = "local:iso/CentOS-Stream-10-latest-x86_64-dvd1.iso"
+  iso_storage_pool  = "local"
+  unmount_iso       = true
 
-  # 🔥 Kickstart magic
+  # Kickstart from Packer HTTP
   http_directory = "http"
-  boot_wait      = "5s"
+  boot_wait      = "10s"
 
   boot_command = [
-    "<tab> inst.ks=http://{{ .HTTPIP }}:{{ .HTTPPort }}/cent10-ks.cfg<enter>"
+    "<esc><wait>",
+    "linux inst.ks=http://{{ .HTTPIP }}:{{ .HTTPPort }}/cent10-ks.cfg ip=dhcp<enter>"
   ]
 
   ssh_username = "root"
   ssh_password = "anilankem"
-  ssh_timeout  = "30m"
+  ssh_timeout  = "40m"
+
+  qemu_agent = true
 }
 
 build {
-  sources = ["source.proxmox-iso.centos"]
+  sources = ["source.proxmox-iso.centos10"]
 
-provisioner "shell" {
-  inline = [
-    "dnf -y update",
-    "dnf -y install qemu-guest-agent cloud-init sudo",
-    "cloud-init clean",
-    "truncate -s 0 /etc/machine-id",
-    "rm -f /var/lib/dbus/machine-id",
-    "rm -rf /var/lib/cloud/*"
-  ]
-}
+  provisioner "shell" {
+    inline = [
+      "dnf -y update",
+      "dnf -y install qemu-guest-agent cloud-init sudo",
+      "systemctl enable qemu-guest-agent",
+      "systemctl enable cloud-init",
+
+      # Golden image cleanup
+      "cloud-init clean",
+      "truncate -s 0 /etc/machine-id",
+      "rm -f /var/lib/dbus/machine-id",
+      "rm -rf /var/lib/cloud/*"
+    ]
+  }
 }
