@@ -46,12 +46,11 @@ source "proxmox-iso" "centos10" {
   }
 
   # ✅ NEW ISO STYLE (no warnings)
-  boot_iso {
-    type         = "scsi"
-    iso_file     = "local:iso/CentOS-Stream-10-latest-x86_64-dvd1.iso"
-    storage_pool = "local"
-    unmount      = true
-  }
+boot_iso {
+  type     = "scsi"
+  iso_file = "local:iso/CentOS-Stream-10-latest-x86_64-dvd1.iso"
+  unmount  = true
+}
 
   # Kickstart via Packer HTTP
   http_directory = "http"
