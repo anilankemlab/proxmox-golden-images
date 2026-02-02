@@ -23,7 +23,6 @@ source "proxmox-iso" "rocky" {
   os       = "other"
   memory   = 2048
 
-  # ✅ CPU (per docs)
   cpu_type = "host"
   cores    = 2
   sockets  = 1
@@ -36,7 +35,6 @@ source "proxmox-iso" "rocky" {
     model  = "virtio"
   }
 
-  # ✅ Disk (per docs)
   disks {
     type         = "scsi"
     storage_pool = "local-lvm"
@@ -44,12 +42,19 @@ source "proxmox-iso" "rocky" {
     format       = "raw"
   }
 
-  # ✅ ISO (per docs — NOT iso {} block)
   boot_iso {
     type     = "scsi"
     iso_file = "local:iso/Rocky-9-latest-x86_64-boot.iso"
     unmount  = true
   }
+
+  # 🔥 Kickstart magic
+  http_directory = "http"
+  boot_wait      = "5s"
+
+  boot_command = [
+    "<tab> inst.ks=http://{{ .HTTPIP }}:{{ .HTTPPort }}/ks.cfg<enter>"
+  ]
 
   ssh_username = "root"
   ssh_password = "rocky"
@@ -62,7 +67,7 @@ build {
   provisioner "shell" {
     inline = [
       "dnf -y update",
-      "dnf -y install openssh-server qemu-guest-agent cloud-init sudo",
+      "dnf -y install qemu-guest-agent cloud-init sudo",
       "systemctl enable sshd",
       "systemctl enable qemu-guest-agent",
       "cloud-init clean",
