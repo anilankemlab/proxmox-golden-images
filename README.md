@@ -47,7 +47,7 @@ Navigate to **Settings** > **Secrets and variables** > **Actions** > **New repos
 
 
 
-## GitHub Runner Setup (Ubuntu)
+## GitHub Runner Setup (linux selfhosted)
 
 To execute the Packer builds, this repository requires a self-hosted runner. Below are the steps to set up a runner on Ubuntu and configure it to start automatically as a service.
 
