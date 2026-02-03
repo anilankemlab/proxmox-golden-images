@@ -28,7 +28,7 @@ source "proxmox-iso" "ubuntu24" {
   sockets  = 1
   numa     = false
 
-  scsi_controller = "virtio-scsi-pci"
+ # scsi_controller = "virtio-scsi-pci"
 
   network_adapters {
     bridge = "vmbr0"
@@ -38,7 +38,7 @@ source "proxmox-iso" "ubuntu24" {
 
   # ✅ Disk (v1.2 syntax)
   disks {
-    type         = "scsi"
+    type         = "virtio"
     storage_pool = "local-lvm"
     disk_size    = "20G"
     format       = "raw"
@@ -47,7 +47,7 @@ source "proxmox-iso" "ubuntu24" {
 
   # ✅ ISO (v1.2 syntax)
   boot_iso {
-    type     = "scsi"
+    type     = "virtio"
     iso_file = "local:iso/ubuntu-24.iso"
     unmount  = true
   }
