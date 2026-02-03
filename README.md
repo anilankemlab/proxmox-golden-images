@@ -1,78 +1,75 @@
 # Proxmox Golden Images
 
-This project automates the creation of golden image templates for Ubuntu, Rocky Linux, and CentOS 10 using Packer and GitHub Actions.
-## Overview
+Automated pipeline for building standardized VM templates on Proxmox VE using Packer and GitHub Actions.
 
-The goal of this repository is to streamline the creation of standardized Virtual Machine (VM) templates within a Proxmox Virtual Environment. By automating the build process with Packer, we ensure consistent and reproducible images.
+## 🚀 Overview
 
-## Prerequisites
+This repository standardizes golden image builds in Proxmox VE. It utilizes **Packer** to drive reproducible image creation and **GitHub Actions** to orchestrate the builds through a self-hosted runner.
 
-1.  Access to a Proxmox VE server.
-2.  An API Token created in Proxmox with sufficient permissions to create and manage QEMU VMs.
+### Supported Distributions
 
-## Token Creation (Proxmox CLI)
+| Distribution | Version | VM ID | Workflow File |
+| :--- | :--- | :--- | :--- |
+| **Rocky Linux** | 9 | `9002` | `.github/workflows/build.yml` |
+| **CentOS** | Stream 10 | `9003` | `.github/workflows/centos10.yml` |
+| **Ubuntu** | 24.04 LTS | `9004` | `.github/workflows/ubuntu24.yml` |
 
-To create a dedicated user and API token with full permissions (Administrator) via the Proxmox shell, run the following commands:
+---
 
-1.  **Create a dedicated user:**
-    ```bash
-    pveum user add packer@pam --comment "User for Packer automation"
-    ```
+## 📋 Prerequisites
 
-2.  **Assign the Administrator role:**
-    ```bash
-    pveum acl modify / -user packer@pam -role Administrator
-    ```
+1.  **Proxmox VE Server**: Access to a Proxmox VE environment.
+2.  **Proxmox API Token**: Credentials with permissions to create and manage QEMU VMs.
+3.  **Self-Hosted Runner**: A Linux machine configured as a GitHub Actions runner with Packer installed.
 
-3.  **Generate the API Token:**
-    This command will output the `value` (secret), which you only see once.
-    ```bash
-    pveum user token add packer@pam packer-token --privsep 0
-    ```
+---
 
-    *   **Token ID:** `packer@pam!packer-token`
-    *   **Secret:** Copy the `value` from the output immediately.
+## ⚙️ Configuration
 
-## Configuration
+### 1. Proxmox API Token Setup
 
-To enable the automation to interact with your Proxmox server, you must add the following credentials to your GitHub Repository Secrets.
+Run the following commands on your Proxmox host shell to create a dedicated user and token with Administrator permissions:
 
-Navigate to **Settings** > **Secrets and variables** > **Actions** > **New repository secret** and add:
+```bash
+# Create user
+pveum user add packer@pam --comment "User for Packer automation"
 
-| Secret Name            | Description                                      | Example Format                          |
-|------------------------|--------------------------------------------------|-----------------------------------------|
-| `PROXMOX_URL`          | The full URL to your Proxmox API endpoint.       | `https://proxmox.example.com:8006/api2/json` |
-| `PROXMOX_TOKEN_ID`     | The Token ID (User + Token Name).                | `user@pam!token_name`                   |
-| `PROXMOX_TOKEN_SECRET` | The secret UUID generated for the token.         | `xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx`  |
+# Assign permissions
+pveum acl modify / -user packer@pam -role Administrator
 
+# Generate token
+pveum user token add packer@pam packer-token --privsep 0
+```
 
+The token creation command outputs a one-time `value` (secret). Save it immediately.
 
-## GitHub Runner Setup (linux selfhosted)
+Token details:
+- Token ID: `packer@pam!packer-token`
+- Secret: the `value` from the token creation output
 
-To execute the Packer builds, this repository requires a self-hosted runner. Below are the steps to set up a runner on Ubuntu and configure it to start automatically as a service.
+**GitHub Repository Secrets**
+Add the following secrets in GitHub at `Settings` > `Secrets and variables` > `Actions` > `New repository secret`:
 
-1.  **Register the Runner:**
-    *   Navigate to **Settings** > **Actions** > **Runners** > **New self-hosted runner**.
-    *   Select **Linux**.
-    *   Follow the instructions provided by GitHub to **Download** and **Configure** the runner agent.
+| Secret Name            | Description                                | Example Format                               |
+|------------------------|--------------------------------------------|----------------------------------------------|
+| `PROXMOX_URL`          | Full Proxmox API endpoint URL              | `https://proxmox.example.com:8006/api2/json` |
+| `PROXMOX_TOKEN_ID`     | Token ID (user + token name)               | `user@pam!token_name`                        |
+| `PROXMOX_TOKEN_SECRET` | Secret value returned when the token is created | `xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx`  |
 
-2.  **Install Dependencies:**
-    Before starting, ensure required dependencies are installed:
-    ```bash
-    # Inside the runner directory
-    sudo ./bin/installdependencies.sh
-    ```
+**Self-Hosted GitHub Runner (Linux)**
+This project requires a Linux self-hosted runner for Packer builds.
 
-3.  **Configure Auto-Start:**
-    Once configured, install the systemd service to ensure the runner starts automatically on boot.
+1. Register the runner:
+   Use GitHub at `Settings` > `Actions` > `Runners` > `New self-hosted runner`, choose Linux, then follow the download and configure instructions.
 
-    ```bash
-    # Install the service
-    sudo ./svc.sh install
+2. Install dependencies (inside the runner directory):
+```bash
+sudo ./bin/installdependencies.sh
+```
 
-    # Start the service
-    sudo ./svc.sh start
-
-    # Verify the service is running
-    sudo ./svc.sh status
-    ```
+3. Install and start the service:
+```bash
+sudo ./svc.sh install
+sudo ./svc.sh start
+sudo ./svc.sh status
+```
