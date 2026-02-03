@@ -57,7 +57,7 @@ source "proxmox-iso" "rocky" {
   ]
 
   ssh_username = "root"
-  ssh_password = "rocky"
+  ssh_password = "anilankem"
   ssh_timeout  = "30m"
 }
 

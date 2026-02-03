@@ -20,15 +20,21 @@ source "proxmox-iso" "centos10" {
   node    = "proxmox"
   vm_id   = 9003
   vm_name = "centos10-stream-golden"
-  os      = "l26"
+  os       = "other"
+  memory   = 2048
 
-  template_name = "centos10-stream-golden"
-
-  memory  = 2048
-  cores   = 2
   cpu_type = "host"
+  cores    = 2
+  sockets  = 1
+  numa     = false
 
   scsi_controller = "virtio-scsi-pci"
+
+  network_adapters {
+    bridge = "vmbr0"
+    model  = "virtio"
+  }
+
 
   # ✅ Disk (v1.2 syntax)
   disks {
@@ -37,11 +43,7 @@ source "proxmox-iso" "centos10" {
     disk_size    = "20G"
     format       = "raw"
   }
-  # ✅ Network
-  network_adapters {
-    bridge = "vmbr0"
-    model  = "virtio"
-  }
+ 
 
   # ✅ ISO (v1.2 syntax)
   boot_iso {
@@ -65,4 +67,19 @@ source "proxmox-iso" "centos10" {
   ssh_timeout  = "40m"
 
   qemu_agent = true
+}
+
+build {
+  sources = ["source.proxmox-iso.centos10"]
+
+provisioner "shell" {
+  inline = [
+    "dnf -y update",
+    "dnf -y install qemu-guest-agent cloud-init sudo",
+    "cloud-init clean",
+    "truncate -s 0 /etc/machine-id",
+    "rm -f /var/lib/dbus/machine-id",
+    "rm -rf /var/lib/cloud/*"
+  ]
+}
 }
