@@ -56,11 +56,13 @@ source "proxmox-iso" "centos10" {
   boot_wait      = "10s"
 
   boot_command = [
-    "<esc><wait>",
-    "linux /images/pxeboot/vmlinuz inst.ks=http://{{ .HTTPIP }}:{{ .HTTPPort }}/cent10-ks.cfg ip=dhcp inst.text<enter>",
-    "initrd /images/pxeboot/initrd.img<enter>",
-    "boot<enter>"
-  ]
+  "<esc><wait>",
+  "e<wait>",
+  "<down><down><end>",
+  " inst.ks=http://{{ .HTTPIP }}:{{ .HTTPPort }}/cent10-ks.cfg ip=dhcp inst.text",
+  "<f10>"
+]
+
 
   ssh_username = "root"
   ssh_password = "anilankem"
