@@ -57,10 +57,11 @@ source "proxmox-iso" "ubuntu24" {
 
   boot_command = [
   "e<wait>",
-  "<end>",
+  "<down><down><down><end>",
   " autoinstall ds=nocloud-net;s=http://{{ .HTTPIP }}:{{ .HTTPPort }}/ ---",
   "<f10>"
   ]
+
 
 
 
