@@ -29,16 +29,19 @@ autoinstall:
     # Removed: sudo, cloud-init, openssh-server (these are installed by default)
 
   late-commands:
-    # 1. Set root password
-    # FIX: Use pipe (|) instead of here-string (<<<) to ensure compatibility with 'sh'
-    - "echo 'root:anilankem' | curtin in-target --target=/target -- chpasswd"
+    # 1. SSH Configuration (Create a priority override file)
+    - curtin in-target --target=/target -- sh -c "echo 'PermitRootLogin yes' > /etc/ssh/sshd_config.d/99-root-login.conf"
+    - curtin in-target --target=/target -- sh -c "echo 'PasswordAuthentication yes' >> /etc/ssh/sshd_config.d/99-root-login.conf"
+    - curtin in-target --target=/target -- chmod 644 /etc/ssh/sshd_config.d/99-root-login.conf
 
-    # 2. Enable Root SSH Login
-    # FIX: Use -r to handle regex metacharacters properly if needed, and -- to separate args
-    - "curtin in-target --target=/target -- sed -i 's/^#\\?PermitRootLogin.*/PermitRootLogin yes/g' /etc/ssh/sshd_config"
-    
-    # 3. Enable Password Authentication (Backup measure, usually enabled by default in 'allow-pw: true')
-    - "curtin in-target --target=/target -- sed -i 's/^#\\?PasswordAuthentication.*/PasswordAuthentication yes/g' /etc/ssh/sshd_config"
+    # 2. Unlock Root Account (CRITICAL STEP)
+    # -U unlocks the account, -s ensures they have a login shell
+    - curtin in-target --target=/target -- usermod -U root
+    - curtin in-target --target=/target -- usermod -s /bin/bash root
 
-    # 4. Enable QEMU Agent (and start it immediately if possible, though mostly for next boot)
-    - "curtin in-target --target=/target -- systemctl enable qemu-guest-agent"
+    # 3. Set Root Password
+    # usage of chpasswd is correct, but we ensure it runs in a clean shell environment
+    - curtin in-target --target=/target -- sh -c "echo 'root:anilankem' | chpasswd"
+
+    # 4. Enable QEMU Agent
+    - curtin in-target --target=/target -- systemctl enable qemu-guest-agent
