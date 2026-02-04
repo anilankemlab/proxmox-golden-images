@@ -45,3 +45,7 @@ autoinstall:
 
     # 4. Enable QEMU Agent
     - curtin in-target --target=/target -- systemctl enable qemu-guest-agent
+
+    # 5. cloud init config for root login via ssh password
+    - curtin in-target --target=/target -- sh -c "echo 'disable_root: false' >> /etc/cloud/cloud.cfg"
+    - curtin in-target --target=/target -- sh -c "echo 'ssh_pwauth: true' >> /etc/cloud/cloud.cfg"
