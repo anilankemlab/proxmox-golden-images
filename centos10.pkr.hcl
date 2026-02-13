@@ -77,6 +77,7 @@ build {
 provisioner "shell" {
   inline = [
     "dnf -y update",
+    "dnf -y install bind-utils"
     "dnf -y install qemu-guest-agent cloud-init sudo",
     "cloud-init clean",
     "truncate -s 0 /etc/machine-id",
